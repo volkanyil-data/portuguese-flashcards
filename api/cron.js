@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const firebaseConfig = {
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", 
-      generationConfig: { responseMimeType: "application/json" } 
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
     });
 
     const prompt = `Generate a single B1-B2 level Portuguese vocabulary word or short phrase commonly used in Brazil. 
@@ -35,6 +35,19 @@ export default async function handler(req, res) {
     const response = await result.response;
     const wordData = JSON.parse(response.text());
 
+    // Find the highest group number from the user's deck
+    const deckDoc = await getDoc(doc(db, "users", "my_deck"));
+    let maxGroup = 2; // Defaults to 2 (from MASTER_WORDS)
+    if (deckDoc.exists()) {
+      const data = deckDoc.data();
+      const customGroups = data.customGroups || [];
+      const extraWords = data.extraWords || [];
+      const allNums = [...customGroups, ...extraWords.map(w => w.group)];
+      if (allNums.length > 0) {
+        maxGroup = Math.max(maxGroup, ...allNums);
+      }
+    }
+
     const wordId = `ai-${Date.now()}`;
     const wordPayload = {
       id: wordId,
@@ -42,7 +55,7 @@ export default async function handler(req, res) {
       en: wordData.en,
       sentencePt: wordData.sentencePt,
       sentenceEn: wordData.sentenceEn,
-      group: 100,
+      group: maxGroup,
       createdAt: new Date().toISOString()
     };
 

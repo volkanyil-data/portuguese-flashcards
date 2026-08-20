@@ -1,0 +1,322 @@
+[
+  {
+    "id": "1",
+    "pt": "Mole",
+    "en": "Soft / easy / weak",
+    "group": 1,
+    "sentencePt": "O pão ficou mole depois de passar a noite fora do saco.",
+    "sentenceEn": "The bread got soft after spending the night out of the bag."
+  },
+  {
+    "id": "2",
+    "pt": "Pingando",
+    "en": "Dripping",
+    "group": 1,
+    "sentencePt": "A torneira da cozinha está pingando faz horas.",
+    "sentenceEn": "The kitchen faucet has been dripping for hours."
+  },
+  {
+    "id": "3",
+    "pt": "Cascavel",
+    "en": "Rattlesnake",
+    "group": 1,
+    "sentencePt": "Tome cuidado ao caminhar pela mata, pois pode haver cascavel por perto.",
+    "sentenceEn": "Be careful walking through the woods, as there might be a rattlesnake nearby."
+  },
+  {
+    "id": "4",
+    "pt": "Bater um papo",
+    "en": "Having a chat",
+    "group": 1,
+    "sentencePt": "Vamos tomar um café para bater um papo?",
+    "sentenceEn": "Shall we grab a coffee to have a chat?"
+  },
+  {
+    "id": "5",
+    "pt": "Pretender",
+    "en": "To intend / to plan",
+    "group": 1,
+    "sentencePt": "Eu pretendo viajar para a Europa no ano que vem.",
+    "sentenceEn": "I intend to travel to Europe next year."
+  },
+  {
+    "id": "6",
+    "pt": "Carimbado",
+    "en": "Stamped / certified",
+    "group": 1,
+    "sentencePt": "Seu passaporte já foi carimbado pela imigração.",
+    "sentenceEn": "Your passport has already been stamped by immigration."
+  },
+  {
+    "id": "7",
+    "pt": "Por engano",
+    "en": "By mistake",
+    "group": 1,
+    "sentencePt": "Eu te liguei por engano hoje de manhã, desculpe.",
+    "sentenceEn": "I called you by mistake this morning, sorry."
+  },
+  {
+    "id": "8",
+    "pt": "Capoeira",
+    "en": "Brazilian martial art / dance",
+    "group": 1,
+    "sentencePt": "Ele treina capoeira três vezes por semana na academia local.",
+    "sentenceEn": "He practices capoeira three times a week at the local gym."
+  },
+  {
+    "id": "9",
+    "pt": "Encomenda",
+    "en": "Order / package",
+    "group": 1,
+    "sentencePt": "O carteiro acabou de entregar a sua encomenda.",
+    "sentenceEn": "The mailman just delivered your package."
+  },
+  {
+    "id": "10",
+    "pt": "Calota",
+    "en": "Hubcap",
+    "group": 1,
+    "sentencePt": "Eu perdi a calota do carro quando passei naquele buraco.",
+    "sentenceEn": "I lost my car's hubcap when I drove over that pothole."
+  },
+  {
+    "id": "11",
+    "pt": "Roda",
+    "en": "Wheel / circle / round",
+    "group": 1,
+    "sentencePt": "Preciso trocar a roda traseira da minha bicicleta.",
+    "sentenceEn": "I need to change the rear wheel of my bicycle."
+  },
+  {
+    "id": "12",
+    "pt": "Cagando",
+    "en": "Taking a dump (vulgar/casual)",
+    "group": 1,
+    "sentencePt": "O cachorro está cagando lá fora no quintal.",
+    "sentenceEn": "The dog is pooping outside in the yard."
+  },
+  {
+    "id": "13",
+    "pt": "Fedondo",
+    "en": "Stinky / smelly",
+    "group": 1,
+    "sentencePt": "O lixo da cozinha já está fedendo bastante, precisamos levar lá fora.",
+    "sentenceEn": "The kitchen trash is already stinking a lot, we need to take it outside."
+  },
+  {
+    "id": "14",
+    "pt": "Sombra",
+    "en": "Shadow / shade",
+    "group": 1,
+    "sentencePt": "Vamos sentar ali na sombra daquela árvore para descansar.",
+    "sentenceEn": "Let's sit over there in the shade of that tree to rest."
+  },
+  {
+    "id": "15",
+    "pt": "Recolher",
+    "en": "To collect / to gather",
+    "group": 1,
+    "sentencePt": "Por favor, recolha as roupas do varal antes que comece a chover.",
+    "sentenceEn": "Please collect the clothes from the clothesline before it starts raining."
+  },
+  {
+    "id": "16",
+    "pt": "De propósito",
+    "en": "On purpose",
+    "group": 1,
+    "sentencePt": "Ela não quebrou o copo de propósito, foi sem querer.",
+    "sentenceEn": "She didn't break the glass on purpose, it was an accident."
+  },
+  {
+    "id": "17",
+    "pt": "Deapegando",
+    "en": "Letting it go / detaching",
+    "group": 1,
+    "sentencePt": "Estou me desapegando de várias roupas velhas que não servem mais.",
+    "sentenceEn": "I am letting go of several old clothes that don't fit anymore."
+  },
+  {
+    "id": "18",
+    "pt": "Bate-papo",
+    "en": "Chat / Q&A / casual talk",
+    "group": 1,
+    "sentencePt": "Tivemos um bate-papo muito agradável durante o almoço.",
+    "sentenceEn": "We had a very pleasant chat during lunch."
+  },
+  {
+    "id": "19",
+    "pt": "Encanador",
+    "en": "Plumber",
+    "group": 1,
+    "sentencePt": "Tive que chamar o encanador para consertar o vazamento do banheiro.",
+    "sentenceEn": "I had to call the plumber to fix the leak in the bathroom."
+  },
+  {
+    "id": "20",
+    "pt": "Macho",
+    "en": "Male (as opposed to female)",
+    "group": 1,
+    "sentencePt": "O gato macho da vizinha sempre vem visitar o nosso quintal.",
+    "sentenceEn": "The neighbor's male cat always comes to visit our yard."
+  },
+  {
+    "id": "21",
+    "pt": "Fêmea",
+    "en": "Female",
+    "group": 1,
+    "sentencePt": "A fêmea do passarinho está cuidando dos filhotes no ninho.",
+    "sentenceEn": "The female bird is taking care of the chicks in the nest."
+  },
+  {
+    "id": "22",
+    "pt": "Gavetas",
+    "en": "Drawers (furniture)",
+    "group": 1,
+    "sentencePt": "As gavetas do meu armário estão completamente bagunçadas.",
+    "sentenceEn": "My dresser drawers are completely messy."
+  },
+  {
+    "id": "23",
+    "pt": "Gravar",
+    "en": "To record / to engrave",
+    "group": 1,
+    "sentencePt": "Nós vamos gravar a entrevista na tarde de hoje.",
+    "sentenceEn": "We are going to record the interview this afternoon."
+  },
+  {
+    "id": "24",
+    "pt": "Gorjeta",
+    "en": "Tip (gratuity)",
+    "group": 1,
+    "sentencePt": "O serviço foi ótimo, então deixei uma boa gorjeta para o garçom.",
+    "sentenceEn": "The service was great, so I left a good tip for the waiter."
+  },
+  {
+    "id": "25",
+    "pt": "Aperta de mão",
+    "en": "Handshake",
+    "group": 1,
+    "sentencePt": "Eles fecharam o negócio com um aperto de mão bem firme.",
+    "sentenceEn": "They closed the business deal with a very firm handshake."
+  },
+  {
+    "id": "26",
+    "pt": "Pesadelo",
+    "en": "Nightmare",
+    "group": 1,
+    "sentencePt": "Tive um pesadelo horrível ontem à noite e demorei para voltar a dormir.",
+    "sentenceEn": "I had a horrible nightmare last night and took a long time to go back to sleep."
+  },
+  {
+    "id": "27",
+    "pt": "Apertar",
+    "en": "To tighten / to press / to click",
+    "group": 1,
+    "sentencePt": "Você precisa apertar esse botão vermelho para ligar a máquina.",
+    "sentenceEn": "You need to press this red button to turn on the machine."
+  },
+  {
+    "id": "28",
+    "pt": "Magoado",
+    "en": "Hurt",
+    "group": 2,
+    "sentencePt": "Ele ficou muito magoado com as palavras duras do chefe.",
+    "sentenceEn": "He was very hurt by his boss's harsh words."
+  },
+  {
+    "id": "29",
+    "pt": "Desafiar",
+    "en": "To challenge / to defy",
+    "group": 2,
+    "sentencePt": "O meu colega gosta de me desafiar para partidas de xadrez.",
+    "sentenceEn": "My colleague likes to challenge me to chess matches."
+  },
+  {
+    "id": "30",
+    "pt": "Prejudicar",
+    "en": "To harm / to damage / to jeopardize",
+    "group": 2,
+    "sentencePt": "Trabalhar até tarde todos os dias pode prejudicar sua saúde mental.",
+    "sentenceEn": "Working late every day can harm your mental health."
+  },
+  {
+    "id": "31",
+    "pt": "Desabafar",
+    "en": "To vent / to open up / to let off steam",
+    "group": 2,
+    "sentencePt": "Eu precisava ligar para um amigo só para desabafar sobre o trabalho.",
+    "sentenceEn": "I needed to call a friend just to vent about work."
+  },
+  {
+    "id": "32",
+    "pt": "Apreciar",
+    "en": "To appreciate / to enjoy / to esteem",
+    "group": 2,
+    "sentencePt": "Gosto de acordar cedo para apreciar o nascer do sol.",
+    "sentenceEn": "I like to wake up early to enjoy the sunrise."
+  },
+  {
+    "id": "33",
+    "pt": "Enxergar",
+    "en": "To see / to perceive / to distinguish visually",
+    "group": 2,
+    "sentencePt": "Sem meus óculos de grau, eu não consigo enxergar as letras da lousa.",
+    "sentenceEn": "Without my prescription glasses, I can't see the letters on the board."
+  },
+  {
+    "id": "34",
+    "pt": "Lidar",
+    "en": "To deal with / to cope with / to handle",
+    "group": 2,
+    "sentencePt": "É difícil lidar com clientes impacientes todos os dias.",
+    "sentenceEn": "It's hard to deal with impatient customers every day."
+  },
+  {
+    "id": "35",
+    "pt": "Picar",
+    "en": "To chop / to sting / to stink",
+    "group": 2,
+    "sentencePt": "Você pode me ajudar a picar os tomates para a salada?",
+    "sentenceEn": "Can you help me chop the tomatoes for the salad?"
+  },
+  {
+    "id": "36",
+    "pt": "Desempenho",
+    "en": "Performance / throughput",
+    "group": 2,
+    "sentencePt": "O novo funcionário teve um excelente desempenho neste mês.",
+    "sentenceEn": "The new employee had an excellent performance this month."
+  },
+  {
+    "id": "37",
+    "pt": "Comprovar",
+    "en": "To prove / to verify / to confirm",
+    "group": 2,
+    "sentencePt": "Você precisa apresentar um documento para comprovar sua idade.",
+    "sentenceEn": "You need to present a document to prove your age."
+  },
+  {
+    "id": "38",
+    "pt": "Abordar",
+    "en": "To approach / to address / to tackle",
+    "group": 2,
+    "sentencePt": "O palestrante vai abordar esse assunto de forma muito simples.",
+    "sentenceEn": "The speaker will address this subject in a very simple way."
+  },
+  {
+    "id": "39",
+    "pt": "A queda",
+    "en": "The drop / the fall",
+    "group": 2,
+    "sentencePt": "A queda nas vendas preocupou a diretoria da empresa.",
+    "sentenceEn": "The drop in sales worried the company's board."
+  },
+  {
+    "id": "40",
+    "pt": "Surgir",
+    "en": "To arise / to appear / to emerge",
+    "group": 2,
+    "sentencePt": "Novos problemas podem surgir se nós não tomarmos cuidado agora.",
+    "sentenceEn": "New problems may arise if we are not careful now."
+  }
+]
