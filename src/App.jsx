@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { signInWithPopup } from "firebase/auth";
 import { doc, onSnapshot, setDoc, collection, getDocs } from "firebase/firestore";
-import { auth, db, googleProvider } from "./firebase";
+import { db } from "./firebase";
 
 // ─── WORD LIST ───
 // Words are hardcoded here — study progress (box, reviews) is saved locally.
@@ -63,8 +62,6 @@ const BOX_COLORS = ["#8a9bae", "#d4940a", "#c06420", "#3a7fdc", "#7c5ce0", "#1a9
 const BOX_LABELS = ["New", "Lv 1", "Lv 2", "Lv 3", "Lv 4", "Mastered"];
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [dailyWords, setDailyWords] = useState([]);
 
   // Progress stored locally: { [id]: { box, reviews, correct, wrong, nextReview } }
@@ -102,19 +99,8 @@ export default function App() {
   const [editEn, setEditEn] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  // Auth listener
+  // Fetch Data
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (!u) setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
-
-  // Fetch Data when user logs in
-  useEffect(() => {
-    if (!user) return;
     setLoading(true);
 
     getDocs(collection(db, "daily_words")).then((snapshot) => {
@@ -123,7 +109,7 @@ export default function App() {
       setDailyWords(words);
     }).catch(console.error);
 
-    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+    const unsubscribe = onSnapshot(doc(db, "users", "my_deck"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setProgress(data.progress || {});
@@ -134,10 +120,9 @@ export default function App() {
     });
 
     return unsubscribe;
-  }, [user]);
+  }, []);
 
   const saveProgress = useCallback((p, extra, groups) => {
-    if (!user) return;
     const np = p !== undefined ? p : progress;
     const ne = extra !== undefined ? extra : extraWords;
     const ng = groups !== undefined ? groups : customGroups;
@@ -146,12 +131,12 @@ export default function App() {
     if (extra !== undefined) setExtraWords(ne);
     if (groups !== undefined) setCustomGroups(ng);
 
-    setDoc(doc(db, "users", user.uid), {
+    setDoc(doc(db, "users", "my_deck"), {
       progress: np,
       extraWords: ne,
       customGroups: ng,
     }, { merge: true }).catch(console.error);
-  }, [user, progress, extraWords, customGroups]);
+  }, [progress, extraWords, customGroups]);
 
   // All words = master + daily + extra added via UI
   const allWords = [...MASTER_WORDS, ...dailyWords, ...extraWords];
@@ -266,27 +251,11 @@ export default function App() {
   const current = session[sIdx] ? getCard(session[sIdx]) : null;
   const mastered = cards.filter(c => c.box >= 4).length;
 
-  const handleLogin = () => signInWithPopup(auth, googleProvider).catch(console.error);
-
-  if (authLoading || loading) return (
+  if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f8faf9" }}>
       <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#1a9d56", animation: "pulse 1s infinite" }} />
     </div>
   );
-
-  if (!user) {
-    return (
-      <div style={S.root}>
-        <div style={{ ...S.content, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}>
-          <h1 style={S.heroTitle}>Aprenda<br/>Português</h1>
-          <p style={S.heroSub}>Sync your vocabulary across all devices.</p>
-          <button onClick={handleLogin} style={{ ...S.primaryBtn, marginTop: 40, maxWidth: 240 }}>
-            Sign in with Google
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={S.root}>
@@ -306,14 +275,9 @@ export default function App() {
           <span style={{ fontSize: 20 }}>🇧🇷</span>
           <span style={S.logoTxt}>Cartões</span>
         </button>
-        <div style={{ display: "flex", gap: 8 }}>
-          {!["home","results"].includes(view) && (
-            <button onClick={() => { setView("home"); setEditId(null); }} style={S.navBack}>← Back</button>
-          )}
-          {view === "home" && (
-            <button onClick={() => auth.signOut()} style={S.navBack}>Logout</button>
-          )}
-        </div>
+        {!["home","results"].includes(view) && (
+          <button onClick={() => { setView("home"); setEditId(null); }} style={S.navBack}>← Back</button>
+        )}
       </nav>
 
       <div style={S.content}>
