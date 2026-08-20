@@ -422,19 +422,23 @@ export default function App() {
   const allWords = [...MASTER_WORDS, ...dailyWords, ...extraWords];
 
   // Merge word with its progress
-  const getCard = useCallback((word) => ({
-    ...word,
-    box: progress[word.id]?.box ?? 0,
-    reviews: progress[word.id]?.reviews ?? 0,
-    correct: progress[word.id]?.correct ?? 0,
-    wrong: progress[word.id]?.wrong ?? 0,
-    nextReview: progress[word.id]?.nextReview ?? 0,
-  }), [progress]);
+  const getCard = useCallback((word) => {
+    const p = progress[word.id] ?? {};
+    return {
+      ...word,
+      group: p.groupOverride !== undefined ? p.groupOverride : word.group,
+      box: p.box ?? 0,
+      reviews: p.reviews ?? 0,
+      correct: p.correct ?? 0,
+      wrong: p.wrong ?? 0,
+      nextReview: p.nextReview ?? 0,
+    };
+  }, [progress]);
 
   const cards = allWords.map(getCard);
 
-  // All groups
-  const allGroupNums = [...new Set([...cards.map(c => c.group), ...customGroups])].sort((a, b) => a - b);
+  // All groups (excluding "mastered" which has its own section)
+  const allGroupNums = [...new Set([...cards.filter(c => c.group !== "mastered").map(c => c.group), ...customGroups])].sort((a, b) => a - b);
   const maxGroup = allGroupNums.length > 0 ? Math.max(...allGroupNums) : 1;
 
   const groupStats = (g) => {
@@ -469,6 +473,18 @@ export default function App() {
     setNewGroupNum("");
     setShowGroupInput(false);
   }, [newGroupNum, allGroupNums, customGroups, saveProgress]);
+
+  // Move word to a different group (including "mastered")
+  const moveWordToGroup = useCallback((id, targetGroup) => {
+    // For MASTER_WORDS we track group overrides in progress
+    if (MASTER_WORDS.find(w => w.id === id)) {
+      const updated = { ...progress, [id]: { ...(progress[id] ?? {}), groupOverride: targetGroup } };
+      saveProgress(updated, undefined, undefined);
+    } else {
+      const updated = extraWords.map(w => w.id === id ? { ...w, group: targetGroup } : w);
+      saveProgress(undefined, updated, undefined);
+    }
+  }, [progress, extraWords, saveProgress]);
 
   // Delete extra word
   const deleteWord = useCallback((id) => {
@@ -570,7 +586,7 @@ export default function App() {
               <p style={S.heroSub}>{cards.length} words · {allGroupNums.length} group{allGroupNums.length !== 1 ? "s" : ""} · {mastered} mastered</p>
             </div>
 
-            <div style={S.grid}>
+            <div style={{ ...S.grid, gridTemplateColumns: "1fr 1fr" }}>
               <button onClick={() => setView("pickGroup")} style={{ ...S.tile, ...S.tileStudy }}>
                 <span style={S.tileIcon}>📖</span>
                 <span style={S.tileName}>Study</span>
@@ -585,6 +601,11 @@ export default function App() {
                 <span style={S.tileIcon}>📋</span>
                 <span style={S.tileName}>Word List</span>
                 <span style={S.tileHint}>{cards.length} words</span>
+              </button>
+              <button onClick={() => setView("mastered")} style={{ ...S.tile, background: "#f0fff8", borderColor: "rgba(26,157,86,.25)" }}>
+                <span style={S.tileIcon}>🏆</span>
+                <span style={S.tileName}>Mastered</span>
+                <span style={S.tileHint}>{cards.filter(c => c.group === "mastered").length} words</span>
               </button>
             </div>
 
@@ -633,17 +654,6 @@ export default function App() {
               </div>
             </div>
 
-            <div style={S.progressWrap}>
-              <div style={S.boxGrid}>
-                {[0,1,2,3,4,5].map(b => (
-                  <div key={b} style={S.boxItem}>
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: BOX_COLORS[b] }} />
-                    <span style={{ fontSize: 15, fontWeight: 700, color: "#1e2e26" }}>{cards.filter(c => c.box === b).length}</span>
-                    <span style={{ fontSize: 10, color: "#8a9b92" }}>{BOX_LABELS[b]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -885,7 +895,20 @@ export default function App() {
                           {card.reviews > 0 && <span style={{ fontSize: 11, color: "#aab5ae" }}>{card.correct}/{card.reviews}</span>}
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 4 }}>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        <select
+                          value={card.group}
+                          onChange={e => {
+                            const val = e.target.value;
+                            moveWordToGroup(card.id, val === "mastered" ? "mastered" : parseInt(val));
+                          }}
+                          style={{ fontSize: 12, padding: "3px 6px", borderRadius: 8, border: "1px solid rgba(0,0,0,.1)", background: "#fff", color: "#3a7fdc", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          {allGroupNums.filter(g => g !== "mastered").map(g => (
+                            <option key={g} value={g}>Group {g}</option>
+                          ))}
+                          <option value="mastered">🏆 Mastered</option>
+                        </select>
                         {!MASTER_WORDS.find(w => w.id === card.id) && (
                           <>
                             <button onClick={() => { setEditId(card.id); setEditPt(card.pt); setEditEn(card.en); }} style={S.iconBtn}>✎</button>
@@ -900,6 +923,47 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* MASTERED */}
+        {view === "mastered" && (() => {
+          const masteredCards = cards.filter(c => c.group === "mastered");
+          return (
+            <div style={{ animation: "fadeUp .35s ease" }}>
+              <h2 style={S.secTitle}>Mastered 🏆 <span style={S.badge}>{masteredCards.length}</span></h2>
+              {masteredCards.length === 0 ? (
+                <div style={{ textAlign: "center", paddingTop: 60, color: "#8a9b92" }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🌱</div>
+                  <p style={{ fontSize: 15 }}>No mastered words yet.</p>
+                  <p style={{ fontSize: 13, marginTop: 8 }}>Move words here from the Word List when you feel confident!</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {masteredCards.sort((a, b) => a.pt.localeCompare(b.pt)).map(card => (
+                    <div key={card.id} style={{ ...S.listItem, borderColor: "rgba(26,157,86,.15)", background: "#f8fff9" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontWeight: 700, color: "#1e2e26" }}>{card.pt}</span>
+                          <span style={{ opacity: .3 }}>→</span>
+                          <span style={{ color: "#5a6b62" }}>{card.en}</span>
+                        </div>
+                      </div>
+                      <select
+                        value="mastered"
+                        onChange={e => moveWordToGroup(card.id, parseInt(e.target.value))}
+                        style={{ fontSize: 12, padding: "3px 6px", borderRadius: 8, border: "1px solid rgba(26,157,86,.2)", background: "#f0fff8", color: "#1a9d56", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        <option value="mastered">🏆 Mastered</option>
+                        {allGroupNums.filter(g => g !== "mastered").map(g => (
+                          <option key={g} value={g}>Move → Group {g}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
