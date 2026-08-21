@@ -15,11 +15,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export default async function handler(req, res) {
-  const isCron = 
-    req.headers['x-vercel-cron'] === '1' || 
-    req.headers['user-agent']?.includes('vercel-cron') || 
+  const isCron =
+    req.headers['x-vercel-cron'] === '1' ||
+    req.headers['user-agent']?.includes('vercel-cron') ||
     process.env.NODE_ENV === 'development';
-    
+
   if (!isCron) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -31,9 +31,19 @@ export default async function handler(req, res) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const prompt = `Generate a single B1-B2 level Portuguese vocabulary word or short phrase commonly used in Brazil. 
+    // Fetch existing daily words so we can tell Gemini to avoid repeats
+    const { getDocs, collection } = await import("firebase/firestore");
+    const existingSnap = await getDocs(collection(db, "daily_words"));
+    const existingWords = [];
+    existingSnap.forEach(d => existingWords.push(d.data().pt));
+
+    const avoidList = existingWords.length > 0
+      ? `\nDo NOT use any of these words that already exist: ${existingWords.join(", ")}.`
+      : "";
+
+    const prompt = `Generate a single B1-B2 level Portuguese vocabulary word or short phrase commonly used in Brazil.${avoidList}
     Return ONLY a JSON object with this exact structure:
-    { "pt": "The Portuguese word", "en": "The English translation", "group": 100, "sentencePt": "A sample sentence using the word in Portuguese", "sentenceEn": "The English translation of the sample sentence" }`;
+    { "pt": "The Portuguese word", "en": "The English translation", "sentencePt": "A sample sentence using the word in Portuguese", "sentenceEn": "The English translation of the sample sentence" }`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
