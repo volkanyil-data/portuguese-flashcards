@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { doc, onSnapshot, setDoc, collection, getDocs } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 // ─── WORD LIST ───
@@ -486,13 +486,25 @@ export default function App() {
     }
   }, [progress, extraWords, saveProgress]);
 
-  // Delete extra word
+  // Delete word from extraWords or dailyWords
   const deleteWord = useCallback((id) => {
     if (MASTER_WORDS.find(w => w.id === id)) return; // can't delete master words
-    const updated = extraWords.filter(w => w.id !== id);
-    saveProgress(undefined, updated, undefined);
+
+    // Remove from extraWords if it's there
+    const updatedExtra = extraWords.filter(w => w.id !== id);
+
+    // Remove from dailyWords and Firebase if it's there
+    if (dailyWords.find(w => w.id === id)) {
+      deleteDoc(doc(db, "daily_words", id)).catch(console.error);
+    }
+
+    // Clean up progress data for this word
+    const updatedProgress = { ...progress };
+    delete updatedProgress[id];
+
+    saveProgress(updatedProgress, updatedExtra, undefined);
     setDeleteConfirm(null);
-  }, [extraWords, saveProgress]);
+  }, [extraWords, dailyWords, progress, saveProgress]);
 
   const pickDir = useCallback((d) => d === "random" ? (Math.random() < 0.5 ? "pt" : "en") : d, []);
 
