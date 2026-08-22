@@ -1,16 +1,71 @@
-# React + Vite
+# Portuguese Flashcard App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern spaced-repetition flashcard app for learning Portuguese vocabulary. Built with React, Vite, Firebase, and Google's Gemini API.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Spaced Repetition**: Words progress through boxes (0-4) based on your performance
+- **Group Organization**: Organize vocabulary into custom groups
+- **Daily AI Words**: Automatic daily Portuguese vocabulary generation via Gemini API
+- **Study Modes**: Multiple directions (Portuguese→English, English→Portuguese, or random)
+- **Progress Tracking**: Save your learning progress to Firebase
+- **Mastered Words**: Track words you've fully learned
+- **Edit & Delete**: Manage your word list with add, edit, and delete functionality
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React 19 + Vite + React Icons
+- **Backend**: Vercel serverless functions with scheduled crons
+- **Database**: Firebase Firestore
+- **AI**: Google Gemini API for vocabulary generation
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### Prerequisites
+- Node.js 18+
+- Firebase project
+- Google Gemini API key
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Setup
+
+Create a `.env` file with your API keys (for local development):
+
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+For Vercel deployment, set these environment variables in your Vercel project settings.
+
+### Development
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:5173`
+
+### Build
+
+```bash
+npm run build
+npm run preview
+```
+
+## Project Structure
+
+- `src/App.jsx` - Main application component
+- `src/firebase.js` - Firebase configuration
+- `api/cron.js` - Daily word generation via Vercel cron
+- `vite.config.js` - Vite configuration
+
+## Security
+
+- API keys are stored in environment variables (never committed to git)
+- `.env` and `.env.local` are in `.gitignore`
+- Use Vercel's environment variable management for production secrets
