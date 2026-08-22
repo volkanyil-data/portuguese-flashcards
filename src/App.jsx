@@ -488,8 +488,6 @@ export default function App() {
 
   // Delete word from extraWords or dailyWords
   const deleteWord = useCallback((id) => {
-    if (MASTER_WORDS.find(w => w.id === id)) return; // can't delete master words
-
     // Remove from extraWords if it's there
     const updatedExtra = extraWords.filter(w => w.id !== id);
 
@@ -504,7 +502,7 @@ export default function App() {
 
     saveProgress(updatedProgress, updatedExtra, undefined);
     setDeleteConfirm(null);
-  }, [extraWords, dailyWords, progress, saveProgress]);
+  }, [extraWords, dailyWords, progress, saveProgress, db]);
 
   const pickDir = useCallback((d) => d === "random" ? (Math.random() < 0.5 ? "pt" : "en") : d, []);
 
