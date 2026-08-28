@@ -37,6 +37,7 @@ export default function App() {
   const [editGroup, setEditGroup] = useState(null);
   const [editGroupName, setEditGroupName] = useState("");
   const [deleteGroupConfirm, setDeleteGroupConfirm] = useState(null);
+  const [groupMenu, setGroupMenu] = useState(null); // group whose ✎ menu is open
 
   // Study
   const [session, setSession] = useState([]);
@@ -351,6 +352,18 @@ export default function App() {
                     </div>
                   );
 
+                  if (groupMenu === g) return (
+                    <div key={g} style={{ ...S.groupCard, flexWrap: "wrap" }}>
+                      <div style={S.groupNum}>{g}</div>
+                      <div style={{ flex: 1, minWidth: 120, fontWeight: 700, color: "#1e2e26", fontSize: 15 }}>{groupLabel(g)}</div>
+                      <button onClick={() => { setGroupMenu(null); setEditGroup(g); setEditGroupName(groupNames[g] || ""); }} style={S.miniGray}>Rename</button>
+                      {allGroupNums.length > 1 && (
+                        <button onClick={() => { setGroupMenu(null); setDeleteGroupConfirm(g); }} style={{ ...S.miniGray, color: "#dc2626" }}>Delete</button>
+                      )}
+                      <button onClick={() => setGroupMenu(null)} style={S.miniGray} title="Close">✗</button>
+                    </div>
+                  );
+
                   if (deleteGroupConfirm === g) return (
                     <div key={g} style={{ ...S.groupCard, flexWrap: "wrap" }}>
                       <div style={{ flex: 1, minWidth: 200, fontSize: 13, color: "#5a6b62" }}>
@@ -372,10 +385,7 @@ export default function App() {
                       {gs.total > 0 && (
                         <button onClick={() => { setPendingGroup(g); setView("pickGroup"); }} style={S.studySmallBtn}>Study</button>
                       )}
-                      <button onClick={() => { setEditGroup(g); setEditGroupName(groupNames[g] || ""); }} style={S.iconBtn} title="Rename group">✎</button>
-                      {allGroupNums.length > 1 && (
-                        <button onClick={() => setDeleteGroupConfirm(g)} style={{ ...S.iconBtn, color: "#dc2626" }} title="Delete group">×</button>
-                      )}
+                      <button onClick={() => setGroupMenu(g)} style={S.iconBtn} title="Edit group">✎</button>
                     </div>
                   );
                 })}
