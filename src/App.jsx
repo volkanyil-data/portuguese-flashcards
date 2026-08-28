@@ -1,332 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { doc, onSnapshot, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, collection, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
-
-// ─── WORD LIST ───
-// Words are hardcoded here — study progress (box, reviews) is saved locally.
-// To add more words, ask Claude to update this list.
-const MASTER_WORDS = [
-  {
-    "id": "1",
-    "pt": "Mole",
-    "en": "Soft / easy / weak",
-    "group": 1,
-    "sentencePt": "O pão ficou mole depois de passar a noite fora do saco.",
-    "sentenceEn": "The bread got soft after spending the night out of the bag."
-  },
-  {
-    "id": "2",
-    "pt": "Pingando",
-    "en": "Dripping",
-    "group": 1,
-    "sentencePt": "A torneira da cozinha está pingando faz horas.",
-    "sentenceEn": "The kitchen faucet has been dripping for hours."
-  },
-  {
-    "id": "3",
-    "pt": "Cascavel",
-    "en": "Rattlesnake",
-    "group": 1,
-    "sentencePt": "Tome cuidado ao caminhar pela mata, pois pode haver cascavel por perto.",
-    "sentenceEn": "Be careful walking through the woods, as there might be a rattlesnake nearby."
-  },
-  {
-    "id": "4",
-    "pt": "Bater um papo",
-    "en": "Having a chat",
-    "group": 1,
-    "sentencePt": "Vamos tomar um café para bater um papo?",
-    "sentenceEn": "Shall we grab a coffee to have a chat?"
-  },
-  {
-    "id": "5",
-    "pt": "Pretender",
-    "en": "To intend / to plan",
-    "group": 1,
-    "sentencePt": "Eu pretendo viajar para a Europa no ano que vem.",
-    "sentenceEn": "I intend to travel to Europe next year."
-  },
-  {
-    "id": "6",
-    "pt": "Carimbado",
-    "en": "Stamped / certified",
-    "group": 1,
-    "sentencePt": "Seu passaporte já foi carimbado pela imigração.",
-    "sentenceEn": "Your passport has already been stamped by immigration."
-  },
-  {
-    "id": "7",
-    "pt": "Por engano",
-    "en": "By mistake",
-    "group": 1,
-    "sentencePt": "Eu te liguei por engano hoje de manhã, desculpe.",
-    "sentenceEn": "I called you by mistake this morning, sorry."
-  },
-  {
-    "id": "8",
-    "pt": "Capoeira",
-    "en": "Brazilian martial art / dance",
-    "group": 1,
-    "sentencePt": "Ele treina capoeira três vezes por semana na academia local.",
-    "sentenceEn": "He practices capoeira three times a week at the local gym."
-  },
-  {
-    "id": "9",
-    "pt": "Encomenda",
-    "en": "Order / package",
-    "group": 1,
-    "sentencePt": "O carteiro acabou de entregar a sua encomenda.",
-    "sentenceEn": "The mailman just delivered your package."
-  },
-  {
-    "id": "10",
-    "pt": "Calota",
-    "en": "Hubcap",
-    "group": 1,
-    "sentencePt": "Eu perdi a calota do carro quando passei naquele buraco.",
-    "sentenceEn": "I lost my car's hubcap when I drove over that pothole."
-  },
-  {
-    "id": "11",
-    "pt": "Roda",
-    "en": "Wheel / circle / round",
-    "group": 1,
-    "sentencePt": "Preciso trocar a roda traseira da minha bicicleta.",
-    "sentenceEn": "I need to change the rear wheel of my bicycle."
-  },
-  {
-    "id": "12",
-    "pt": "Cagando",
-    "en": "Taking a dump (vulgar/casual)",
-    "group": 1,
-    "sentencePt": "O cachorro está cagando lá fora no quintal.",
-    "sentenceEn": "The dog is pooping outside in the yard."
-  },
-  {
-    "id": "13",
-    "pt": "Fedondo",
-    "en": "Stinky / smelly",
-    "group": 1,
-    "sentencePt": "O lixo da cozinha já está fedendo bastante, precisamos levar lá fora.",
-    "sentenceEn": "The kitchen trash is already stinking a lot, we need to take it outside."
-  },
-  {
-    "id": "14",
-    "pt": "Sombra",
-    "en": "Shadow / shade",
-    "group": 1,
-    "sentencePt": "Vamos sentar ali na sombra daquela árvore para descansar.",
-    "sentenceEn": "Let's sit over there in the shade of that tree to rest."
-  },
-  {
-    "id": "15",
-    "pt": "Recolher",
-    "en": "To collect / to gather",
-    "group": 1,
-    "sentencePt": "Por favor, recolha as roupas do varal antes que comece a chover.",
-    "sentenceEn": "Please collect the clothes from the clothesline before it starts raining."
-  },
-  {
-    "id": "16",
-    "pt": "De propósito",
-    "en": "On purpose",
-    "group": 1,
-    "sentencePt": "Ela não quebrou o copo de propósito, foi sem querer.",
-    "sentenceEn": "She didn't break the glass on purpose, it was an accident."
-  },
-  {
-    "id": "17",
-    "pt": "Deapegando",
-    "en": "Letting it go / detaching",
-    "group": 1,
-    "sentencePt": "Estou me desapegando de várias roupas velhas que não servem mais.",
-    "sentenceEn": "I am letting go of several old clothes that don't fit anymore."
-  },
-  {
-    "id": "18",
-    "pt": "Bate-papo",
-    "en": "Chat / Q&A / casual talk",
-    "group": 1,
-    "sentencePt": "Tivemos um bate-papo muito agradável durante o almoço.",
-    "sentenceEn": "We had a very pleasant chat during lunch."
-  },
-  {
-    "id": "19",
-    "pt": "Encanador",
-    "en": "Plumber",
-    "group": 1,
-    "sentencePt": "Tive que chamar o encanador para consertar o vazamento do banheiro.",
-    "sentenceEn": "I had to call the plumber to fix the leak in the bathroom."
-  },
-  {
-    "id": "20",
-    "pt": "Macho",
-    "en": "Male (as opposed to female)",
-    "group": 1,
-    "sentencePt": "O gato macho da vizinha sempre vem visitar o nosso quintal.",
-    "sentenceEn": "The neighbor's male cat always comes to visit our yard."
-  },
-  {
-    "id": "21",
-    "pt": "Fêmea",
-    "en": "Female",
-    "group": 1,
-    "sentencePt": "A fêmea do passarinho está cuidando dos filhotes no ninho.",
-    "sentenceEn": "The female bird is taking care of the chicks in the nest."
-  },
-  {
-    "id": "22",
-    "pt": "Gavetas",
-    "en": "Drawers (furniture)",
-    "group": 1,
-    "sentencePt": "As gavetas do meu armário estão completamente bagunçadas.",
-    "sentenceEn": "My dresser drawers are completely messy."
-  },
-  {
-    "id": "23",
-    "pt": "Gravar",
-    "en": "To record / to engrave",
-    "group": 1,
-    "sentencePt": "Nós vamos gravar a entrevista na tarde de hoje.",
-    "sentenceEn": "We are going to record the interview this afternoon."
-  },
-  {
-    "id": "24",
-    "pt": "Gorjeta",
-    "en": "Tip (gratuity)",
-    "group": 1,
-    "sentencePt": "O serviço foi ótimo, então deixei uma boa gorjeta para o garçom.",
-    "sentenceEn": "The service was great, so I left a good tip for the waiter."
-  },
-  {
-    "id": "25",
-    "pt": "Aperta de mão",
-    "en": "Handshake",
-    "group": 1,
-    "sentencePt": "Eles fecharam o negócio com um aperto de mão bem firme.",
-    "sentenceEn": "They closed the business deal with a very firm handshake."
-  },
-  {
-    "id": "26",
-    "pt": "Pesadelo",
-    "en": "Nightmare",
-    "group": 1,
-    "sentencePt": "Tive um pesadelo horrível ontem à noite e demorei para voltar a dormir.",
-    "sentenceEn": "I had a horrible nightmare last night and took a long time to go back to sleep."
-  },
-  {
-    "id": "27",
-    "pt": "Apertar",
-    "en": "To tighten / to press / to click",
-    "group": 1,
-    "sentencePt": "Você precisa apertar esse botão vermelho para ligar a máquina.",
-    "sentenceEn": "You need to press this red button to turn on the machine."
-  },
-  {
-    "id": "28",
-    "pt": "Magoado",
-    "en": "Hurt",
-    "group": 2,
-    "sentencePt": "Ele ficou muito magoado com as palavras duras do chefe.",
-    "sentenceEn": "He was very hurt by his boss's harsh words."
-  },
-  {
-    "id": "29",
-    "pt": "Desafiar",
-    "en": "To challenge / to defy",
-    "group": 2,
-    "sentencePt": "O meu colega gosta de me desafiar para partidas de xadrez.",
-    "sentenceEn": "My colleague likes to challenge me to chess matches."
-  },
-  {
-    "id": "30",
-    "pt": "Prejudicar",
-    "en": "To harm / to damage / to jeopardize",
-    "group": 2,
-    "sentencePt": "Trabalhar até tarde todos os dias pode prejudicar sua saúde mental.",
-    "sentenceEn": "Working late every day can harm your mental health."
-  },
-  {
-    "id": "31",
-    "pt": "Desabafar",
-    "en": "To vent / to open up / to let off steam",
-    "group": 2,
-    "sentencePt": "Eu precisava ligar para um amigo só para desabafar sobre o trabalho.",
-    "sentenceEn": "I needed to call a friend just to vent about work."
-  },
-  {
-    "id": "32",
-    "pt": "Apreciar",
-    "en": "To appreciate / to enjoy / to esteem",
-    "group": 2,
-    "sentencePt": "Gosto de acordar cedo para apreciar o nascer do sol.",
-    "sentenceEn": "I like to wake up early to enjoy the sunrise."
-  },
-  {
-    "id": "33",
-    "pt": "Enxergar",
-    "en": "To see / to perceive / to distinguish visually",
-    "group": 2,
-    "sentencePt": "Sem meus óculos de grau, eu não consigo enxergar as letras da lousa.",
-    "sentenceEn": "Without my prescription glasses, I can't see the letters on the board."
-  },
-  {
-    "id": "34",
-    "pt": "Lidar",
-    "en": "To deal with / to cope with / to handle",
-    "group": 2,
-    "sentencePt": "É difícil lidar com clientes impacientes todos os dias.",
-    "sentenceEn": "It's hard to deal with impatient customers every day."
-  },
-  {
-    "id": "35",
-    "pt": "Picar",
-    "en": "To chop / to sting / to stink",
-    "group": 2,
-    "sentencePt": "Você pode me ajudar a picar os tomates para a salada?",
-    "sentenceEn": "Can you help me chop the tomatoes for the salad?"
-  },
-  {
-    "id": "36",
-    "pt": "Desempenho",
-    "en": "Performance / throughput",
-    "group": 2,
-    "sentencePt": "O novo funcionário teve um excelente desempenho neste mês.",
-    "sentenceEn": "The new employee had an excellent performance this month."
-  },
-  {
-    "id": "37",
-    "pt": "Comprovar",
-    "en": "To prove / to verify / to confirm",
-    "group": 2,
-    "sentencePt": "Você precisa apresentar um documento para comprovar sua idade.",
-    "sentenceEn": "You need to present a document to prove your age."
-  },
-  {
-    "id": "38",
-    "pt": "Abordar",
-    "en": "To approach / to address / to tackle",
-    "group": 2,
-    "sentencePt": "O palestrante vai abordar esse assunto de forma muito simples.",
-    "sentenceEn": "The speaker will address this subject in a very simple way."
-  },
-  {
-    "id": "39",
-    "pt": "A queda",
-    "en": "The drop / the fall",
-    "group": 2,
-    "sentencePt": "A queda nas vendas preocupou a diretoria da empresa.",
-    "sentenceEn": "The drop in sales worried the company's board."
-  },
-  {
-    "id": "40",
-    "pt": "Surgir",
-    "en": "To arise / to appear / to emerge",
-    "group": 2,
-    "sentencePt": "Novos problemas podem surgir se nós não tomarmos cuidado agora.",
-    "sentenceEn": "New problems may arise if we are not careful now."
-  }
-];
 
 const getNextReview = (box) => Date.now() + Math.pow(2, box) * 60000;
 const shuffle = (arr) => {
@@ -338,28 +12,31 @@ const shuffle = (arr) => {
   return a;
 };
 
-const BOX_COLORS = ["#8a9bae", "#d4940a", "#c06420", "#3a7fdc", "#7c5ce0", "#1a9d56"];
-const BOX_LABELS = ["New", "Lv 1", "Lv 2", "Lv 3", "Lv 4", "Mastered"];
-
 export default function App() {
-  const [dailyWords, setDailyWords] = useState([]);
+  // All words live in the "words" Firestore collection (loaded live)
+  const [words, setWords] = useState([]);
 
-  // Progress stored locally: { [id]: { box, reviews, correct, wrong, nextReview } }
+  // Progress stored per-word: { [id]: { box, reviews, correct, wrong, nextReview } }
   const [progress, setProgress] = useState({});
   const [view, setView] = useState("home");
-  const [loading, setLoading] = useState(true);
+  const [wordsLoaded, setWordsLoaded] = useState(false);
+  const [deckLoaded, setDeckLoaded] = useState(false);
+  const loading = !wordsLoaded || !deckLoaded;
 
   // Adding words
   const [newPt, setNewPt] = useState("");
   const [newEn, setNewEn] = useState("");
   const [newGroup, setNewGroup] = useState(1);
-  const [extraWords, setExtraWords] = useState([]); // words added via UI this session
   const [justAdded, setJustAdded] = useState(false);
 
-  // Group creation
+  // Group creation / management
   const [newGroupNum, setNewGroupNum] = useState("");
   const [showGroupInput, setShowGroupInput] = useState(false);
   const [customGroups, setCustomGroups] = useState([]);
+  const [groupNames, setGroupNames] = useState({}); // { [groupNum]: "custom name" }
+  const [editGroup, setEditGroup] = useState(null);
+  const [editGroupName, setEditGroupName] = useState("");
+  const [deleteGroupConfirm, setDeleteGroupConfirm] = useState(null);
 
   // Study
   const [session, setSession] = useState([]);
@@ -374,6 +51,7 @@ export default function App() {
 
   // List
   const [listFilter, setListFilter] = useState("All");
+  const [listSort, setListSort] = useState("alpha"); // "alpha" | "newest"
   const [editId, setEditId] = useState(null);
   const [editPt, setEditPt] = useState("");
   const [editEn, setEditEn] = useState("");
@@ -381,61 +59,63 @@ export default function App() {
 
   // Fetch Data
   useEffect(() => {
-    setLoading(true);
+    const unsubWords = onSnapshot(collection(db, "words"), (snapshot) => {
+      const list = [];
+      snapshot.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      setWords(list);
+      setWordsLoaded(true);
+    }, console.error);
 
-    getDocs(collection(db, "daily_words")).then((snapshot) => {
-      const words = [];
-      snapshot.forEach((doc) => words.push({ id: doc.id, ...doc.data() }));
-      setDailyWords(words);
-    }).catch(console.error);
-
-    const unsubscribe = onSnapshot(doc(db, "users", "my_deck"), (docSnap) => {
+    const unsubDeck = onSnapshot(doc(db, "users", "my_deck"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setProgress(data.progress || {});
-        setExtraWords(data.extraWords || []);
         setCustomGroups(data.customGroups || []);
+        setGroupNames(data.groupNames || {});
       }
-      setLoading(false);
+      setDeckLoaded(true);
     });
 
-    return unsubscribe;
+    return () => { unsubWords(); unsubDeck(); };
   }, []);
 
-  const saveProgress = useCallback((p, extra, groups) => {
+  const saveDeck = useCallback((p, groups, names) => {
     const np = p !== undefined ? p : progress;
-    const ne = extra !== undefined ? extra : extraWords;
     const ng = groups !== undefined ? groups : customGroups;
-    
+    const nn = names !== undefined ? names : groupNames;
+
     if (p !== undefined) setProgress(np);
-    if (extra !== undefined) setExtraWords(ne);
     if (groups !== undefined) setCustomGroups(ng);
+    if (names !== undefined) setGroupNames(nn);
 
     setDoc(doc(db, "users", "my_deck"), {
       progress: np,
-      extraWords: ne,
       customGroups: ng,
+      groupNames: nn,
     }, { merge: true }).catch(console.error);
-  }, [progress, extraWords, customGroups]);
+  }, [progress, customGroups, groupNames]);
 
-  // All words = master + daily + extra added via UI
-  const allWords = [...MASTER_WORDS, ...dailyWords, ...extraWords];
+  // Display name for a group ("Group 3" unless the user renamed it)
+  const groupLabel = useCallback((g) => {
+    if (g === "mastered") return "Mastered";
+    return groupNames[g] || `Group ${g}`;
+  }, [groupNames]);
 
   // Merge word with its progress
   const getCard = useCallback((word) => {
     const p = progress[word.id] ?? {};
     return {
       ...word,
-      group: p.groupOverride !== undefined ? p.groupOverride : word.group,
       box: p.box ?? 0,
       reviews: p.reviews ?? 0,
       correct: p.correct ?? 0,
       wrong: p.wrong ?? 0,
       nextReview: p.nextReview ?? 0,
+      createdAt: word.createdAt ?? null,
     };
   }, [progress]);
 
-  const cards = allWords.map(getCard);
+  const cards = words.map(getCard);
 
   // All groups (excluding "mastered" which has its own section)
   const allGroupNums = [...new Set([...cards.filter(c => c.group !== "mastered").map(c => c.group), ...customGroups])].sort((a, b) => a - b);
@@ -443,66 +123,87 @@ export default function App() {
 
   const groupStats = (g) => {
     const pool = g === "All" ? cards : cards.filter(c => c.group === g);
-    const m = pool.filter(c => c.box >= 4).length;
-    return { total: pool.length, mastered: m, pct: pool.length ? Math.round((m / pool.length) * 100) : 0 };
+    return { total: pool.length };
   };
 
-  // Add word via UI
+  // Add word via UI. sentencePt/sentenceEn are left null — the daily cron
+  // backfills a sample sentence for any word missing one.
   const addWord = useCallback(() => {
     if (!newPt.trim() || !newEn.trim()) return;
-    const word = {
-      id: `u-${Date.now()}`,
+    const id = `u-${Date.now()}`;
+    setDoc(doc(db, "words", id), {
       pt: newPt.trim(),
       en: newEn.trim(),
       group: newGroup,
-    };
-    const updated = [...extraWords, word];
-    saveProgress(undefined, updated, undefined);
+      sentencePt: null,
+      sentenceEn: null,
+      createdAt: new Date().toISOString(),
+      source: "manual",
+    }).catch(console.error);
     setNewPt(""); setNewEn("");
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
-  }, [newPt, newEn, newGroup, extraWords, saveProgress]);
+  }, [newPt, newEn, newGroup]);
 
   // Add new group
   const addGroup = useCallback(() => {
     const num = parseInt(newGroupNum);
     if (!num || num < 1 || allGroupNums.includes(num)) return;
     const updated = [...customGroups, num].sort((a, b) => a - b);
-    saveProgress(undefined, undefined, updated);
+    saveDeck(undefined, updated, undefined);
     setNewGroup(num);
     setNewGroupNum("");
     setShowGroupInput(false);
-  }, [newGroupNum, allGroupNums, customGroups, saveProgress]);
+  }, [newGroupNum, allGroupNums, customGroups, saveDeck]);
+
+  // Rename a group (empty name clears it back to the default "Group N")
+  const renameGroup = useCallback((g, name) => {
+    const updated = { ...groupNames };
+    if (name.trim()) updated[g] = name.trim();
+    else delete updated[g];
+    saveDeck(undefined, undefined, updated);
+    setEditGroup(null);
+  }, [groupNames, saveDeck]);
+
+  // Delete a group. Its words are moved to the lowest remaining group rather
+  // than deleted — never allowed on the last remaining group.
+  const deleteGroup = useCallback((g) => {
+    const remaining = allGroupNums.filter(n => n !== g);
+    if (!remaining.length) return;
+    const fallback = remaining[0];
+
+    cards.filter(c => c.group === g).forEach(c => {
+      setDoc(doc(db, "words", c.id), { group: fallback }, { merge: true }).catch(console.error);
+    });
+
+    const updatedNames = { ...groupNames };
+    delete updatedNames[g];
+    saveDeck(undefined, customGroups.filter(n => n !== g), updatedNames);
+
+    if (listFilter === g) setListFilter("All");
+    if (newGroup === g) setNewGroup(fallback);
+    setDeleteGroupConfirm(null);
+  }, [allGroupNums, cards, groupNames, customGroups, saveDeck, listFilter, newGroup]);
 
   // Move word to a different group (including "mastered")
   const moveWordToGroup = useCallback((id, targetGroup) => {
-    // For MASTER_WORDS we track group overrides in progress
-    if (MASTER_WORDS.find(w => w.id === id)) {
-      const updated = { ...progress, [id]: { ...(progress[id] ?? {}), groupOverride: targetGroup } };
-      saveProgress(updated, undefined, undefined);
-    } else {
-      const updated = extraWords.map(w => w.id === id ? { ...w, group: targetGroup } : w);
-      saveProgress(undefined, updated, undefined);
-    }
-  }, [progress, extraWords, saveProgress]);
+    setDoc(doc(db, "words", id), { group: targetGroup }, { merge: true }).catch(console.error);
+  }, []);
 
-  // Delete word from extraWords or dailyWords
+  // Edit pt/en text for a word
+  const updateWordText = useCallback((id, pt, en) => {
+    setDoc(doc(db, "words", id), { pt, en }, { merge: true }).catch(console.error);
+  }, []);
+
+  // Delete a word entirely, and clean up its progress data
   const deleteWord = useCallback((id) => {
-    // Remove from extraWords if it's there
-    const updatedExtra = extraWords.filter(w => w.id !== id);
+    deleteDoc(doc(db, "words", id)).catch(console.error);
 
-    // Remove from dailyWords and Firebase if it's there
-    if (dailyWords.find(w => w.id === id)) {
-      deleteDoc(doc(db, "daily_words", id)).catch(console.error);
-    }
-
-    // Clean up progress data for this word
     const updatedProgress = { ...progress };
     delete updatedProgress[id];
-
-    saveProgress(updatedProgress, updatedExtra, undefined);
+    saveDeck(updatedProgress, undefined);
     setDeleteConfirm(null);
-  }, [extraWords, dailyWords, progress, saveProgress, db]);
+  }, [progress, saveDeck]);
 
   const pickDir = useCallback((d) => d === "random" ? (Math.random() < 0.5 ? "pt" : "en") : d, []);
 
@@ -543,9 +244,9 @@ export default function App() {
         nextReview: getNextReview(newBox),
       },
     };
-    saveProgress(updated, undefined, undefined);
+    saveDeck(updated, undefined);
     setStats(s => ({ correct: s.correct + (ok ? 1 : 0), wrong: s.wrong + (ok ? 0 : 1) }));
-  }, [session, sIdx, feedback, progress, saveProgress]);
+  }, [session, sIdx, feedback, progress, saveDeck]);
 
   const nextCard = useCallback(() => {
     const next = sIdx + 1;
@@ -555,7 +256,7 @@ export default function App() {
   }, [sIdx, session, studyDir]);
 
   const current = session[sIdx] ? getCard(session[sIdx]) : null;
-  const mastered = cards.filter(c => c.box >= 4).length;
+  const mastered = cards.filter(c => c.group === "mastered").length;
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f8faf9" }}>
@@ -577,12 +278,12 @@ export default function App() {
       `}</style>
 
       <nav style={S.nav}>
-        <button onClick={() => { setView("home"); setEditId(null); setDeleteConfirm(null); }} style={S.logoBtn}>
+        <button onClick={() => { setView("home"); setEditId(null); setDeleteConfirm(null); setPendingGroup(null); }} style={S.logoBtn}>
           <span style={{ fontSize: 20 }}>🇧🇷</span>
           <span style={S.logoTxt}>Cartões</span>
         </button>
         {!["home","results"].includes(view) && (
-          <button onClick={() => { setView("home"); setEditId(null); }} style={S.navBack}>← Back</button>
+          <button onClick={() => { setView("home"); setEditId(null); setPendingGroup(null); }} style={S.navBack}>← Back</button>
         )}
       </nav>
 
@@ -597,11 +298,6 @@ export default function App() {
             </div>
 
             <div style={{ ...S.grid, gridTemplateColumns: "1fr 1fr" }}>
-              <button onClick={() => setView("pickGroup")} style={{ ...S.tile, ...S.tileStudy }}>
-                <span style={S.tileIcon}>📖</span>
-                <span style={S.tileName}>Study</span>
-                <span style={S.tileHint}>Pick a group</span>
-              </button>
               <button onClick={() => setView("add")} style={{ ...S.tile, ...S.tileAdd }}>
                 <span style={S.tileIcon}>✏️</span>
                 <span style={S.tileName}>Add Word</span>
@@ -611,11 +307,6 @@ export default function App() {
                 <span style={S.tileIcon}>📋</span>
                 <span style={S.tileName}>Word List</span>
                 <span style={S.tileHint}>{cards.length} words</span>
-              </button>
-              <button onClick={() => setView("mastered")} style={{ ...S.tile, background: "#f0fff8", borderColor: "rgba(26,157,86,.25)" }}>
-                <span style={S.tileIcon}>🏆</span>
-                <span style={S.tileName}>Mastered</span>
-                <span style={S.tileHint}>{cards.filter(c => c.group === "mastered").length} words</span>
               </button>
             </div>
 
@@ -637,26 +328,53 @@ export default function App() {
               )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ ...S.groupCard, background: "#f8fff9", borderColor: "rgba(26,157,86,.15)" }}>
+                  <div style={{ ...S.groupNum, background: "rgba(26,157,86,.1)", color: "#1a9d56" }}>🏆</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#1e2e26", fontSize: 15 }}>Mastered</div>
+                    <div style={{ fontSize: 12, color: "#8a9b92" }}>{cards.filter(c => c.group === "mastered").length} words</div>
+                  </div>
+                  <button onClick={() => setView("mastered")} style={S.studySmallBtn}>View</button>
+                </div>
                 {allGroupNums.map(g => {
                   const gs = groupStats(g);
+
+                  if (editGroup === g) return (
+                    <div key={g} style={S.groupCard}>
+                      <div style={S.groupNum}>{g}</div>
+                      <input value={editGroupName} onChange={e => setEditGroupName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") renameGroup(g, editGroupName); if (e.key === "Escape") setEditGroup(null); }}
+                        placeholder={`Group ${g}`} autoFocus
+                        style={{ ...S.input, flex: 1, padding: "8px 10px", fontSize: 14 }} />
+                      <button onClick={() => renameGroup(g, editGroupName)} style={S.miniGreen}>✓</button>
+                      <button onClick={() => setEditGroup(null)} style={S.miniGray}>✗</button>
+                    </div>
+                  );
+
+                  if (deleteGroupConfirm === g) return (
+                    <div key={g} style={{ ...S.groupCard, flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 200, fontSize: 13, color: "#5a6b62" }}>
+                        Delete <strong>{groupLabel(g)}</strong>?
+                        {gs.total > 0 && <> Its {gs.total} word{gs.total !== 1 ? "s" : ""} will move to <strong>{groupLabel(allGroupNums.filter(n => n !== g)[0])}</strong>.</>}
+                      </div>
+                      <button onClick={() => deleteGroup(g)} style={{ ...S.miniGreen, background: "rgba(220,38,38,.1)", color: "#dc2626" }}>Yes</button>
+                      <button onClick={() => setDeleteGroupConfirm(null)} style={S.miniGray}>No</button>
+                    </div>
+                  );
+
                   return (
                     <div key={g} style={S.groupCard}>
                       <div style={S.groupNum}>{g}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontWeight: 700, color: "#1e2e26", fontSize: 15 }}>Group {g}</span>
-                          <span style={{ fontSize: 12, color: "#8a9b92" }}>{gs.total} word{gs.total !== 1 ? "s" : ""}</span>
-                          {gs.pct === 100 && gs.total > 0 && <span style={{ fontSize: 11, color: "#1a9d56", fontWeight: 700 }}>✓ Done</span>}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(0,0,0,.06)", maxWidth: 140 }}>
-                            <div style={{ height: "100%", borderRadius: 2, background: gs.pct === 100 ? "#1a9d56" : "#3a7fdc", width: `${gs.pct}%`, transition: "width .3s" }} />
-                          </div>
-                          <span style={{ fontSize: 11, color: gs.pct === 100 ? "#1a9d56" : "#8a9b92", fontWeight: 600 }}>{gs.pct}%</span>
-                        </div>
+                        <div style={{ fontWeight: 700, color: "#1e2e26", fontSize: 15 }}>{groupLabel(g)}</div>
+                        <div style={{ fontSize: 12, color: "#8a9b92" }}>{gs.total} word{gs.total !== 1 ? "s" : ""}</div>
                       </div>
                       {gs.total > 0 && (
                         <button onClick={() => { setPendingGroup(g); setView("pickGroup"); }} style={S.studySmallBtn}>Study</button>
+                      )}
+                      <button onClick={() => { setEditGroup(g); setEditGroupName(groupNames[g] || ""); }} style={S.iconBtn} title="Rename group">✎</button>
+                      {allGroupNums.length > 1 && (
+                        <button onClick={() => setDeleteGroupConfirm(g)} style={{ ...S.iconBtn, color: "#dc2626" }} title="Delete group">×</button>
                       )}
                     </div>
                   );
@@ -686,8 +404,8 @@ export default function App() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={S.groupNum}>{g}</div>
                       <div>
-                        <span style={{ fontWeight: 700, color: "#1e2e26" }}>Group {g}</span>
-                        <span style={{ fontSize: 12, color: "#8a9b92", marginLeft: 8 }}>{gs.total} cards · {gs.pct}% mastered</span>
+                        <span style={{ fontWeight: 700, color: "#1e2e26" }}>{groupLabel(g)}</span>
+                        <span style={{ fontSize: 12, color: "#8a9b92", marginLeft: 8 }}>{gs.total} card{gs.total !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
                     <span style={{ fontSize: 18, color: "#8a9b92" }}>→</span>
@@ -701,10 +419,10 @@ export default function App() {
         {/* PICK DIRECTION */}
         {view === "pickGroup" && pendingGroup && (
           <div style={{ animation: "fadeUp .3s ease", maxWidth: 440, margin: "0 auto" }}>
-            <button onClick={() => setPendingGroup(null)} style={{ ...S.navBack, marginBottom: 20 }}>← Back</button>
+            <button onClick={() => { setPendingGroup(null); setView("home"); }} style={{ ...S.navBack, marginBottom: 20 }}>← Back</button>
             <h2 style={S.secTitle}>Study Direction</h2>
             <p style={{ fontSize: 14, color: "#8a9b92", marginBottom: 20, marginTop: -16 }}>
-              {pendingGroup === "All" ? "All Words" : `Group ${pendingGroup}`}
+              {pendingGroup === "All" ? "All Words" : groupLabel(pendingGroup)}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
@@ -736,12 +454,12 @@ export default function App() {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {allGroupNums.map(g => (
                   <button key={g} onClick={() => setNewGroup(g)} style={{
-                    width: 44, height: 44, borderRadius: 10, fontSize: 16, fontWeight: 700,
+                    minWidth: 44, height: 44, padding: "0 12px", borderRadius: 10, fontSize: 14, fontWeight: 700,
                     border: newGroup === g ? "2px solid #1a9d56" : "1px solid rgba(0,0,0,.1)",
                     background: newGroup === g ? "rgba(26,157,86,.06)" : "#fff",
                     color: newGroup === g ? "#1a9d56" : "#3a4a42",
                     cursor: "pointer", transition: "all .15s",
-                  }}>{g}</button>
+                  }}>{groupLabel(g)}</button>
                 ))}
                 <button onClick={() => setView("home")} style={{ ...S.miniGray, height: 44, padding: "0 12px", fontSize: 12 }}>
                   + New Group
@@ -766,7 +484,7 @@ export default function App() {
               {justAdded ? "✓ Added!" : "Add Card"}
             </button>
             <p style={{ fontSize: 12, color: "#8a9b92", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>
-              Words you add here are saved on this device.<br/>For a permanent list, send words to Claude in chat.
+              Saved to your deck right away.<br/>A sample sentence is added automatically by the next daily update.
             </p>
           </div>
         )}
@@ -780,7 +498,7 @@ export default function App() {
                 <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg,#1a9d56,#15803d)", width: `${((sIdx + 1) / session.length) * 100}%`, transition: "width .3s" }} />
               </div>
             </div>
-            <div style={{ marginBottom: 6, fontSize: 12, color: "#3a7fdc", fontWeight: 700 }}>Group {current.group}</div>
+            <div style={{ marginBottom: 6, fontSize: 12, color: "#3a7fdc", fontWeight: 700 }}>{groupLabel(current.group)}</div>
             <div style={{ marginBottom: 20, fontSize: 18, color: "#8a9b92" }}>
               {dir === "pt" ? "🇧🇷  →  🇬🇧" : "🇬🇧  →  🇧🇷"}
             </div>
@@ -834,7 +552,7 @@ export default function App() {
             <h2 style={{ ...S.secTitle, textAlign: "center" }}>Session Complete</h2>
             {studyGroup !== null && (
               <p style={{ fontSize: 14, color: "#8a9b92", marginTop: -16, marginBottom: 20 }}>
-                {studyGroup === "All" ? "All Words" : `Group ${studyGroup}`}
+                {studyGroup === "All" ? "All Words" : groupLabel(studyGroup)}
               </p>
             )}
             <div style={{ display: "flex", justifyContent: "center", gap: 40, margin: "30px 0" }}>
@@ -858,7 +576,7 @@ export default function App() {
         {view === "list" && (
           <div style={{ animation: "fadeUp .35s ease" }}>
             <h2 style={S.secTitle}>Your Words <span style={S.badge}>{cards.length}</span></h2>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
               {["All", ...allGroupNums].map(g => (
                 <button key={g} onClick={() => setListFilter(g)} style={{
                   padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -866,21 +584,40 @@ export default function App() {
                   background: listFilter === g ? "rgba(26,157,86,.06)" : "#fff",
                   color: listFilter === g ? "#1a9d56" : "#6b7c72", transition: "all .2s",
                 }}>
-                  {g === "All" ? "All" : `Group ${g}`}
+                  {g === "All" ? "All" : groupLabel(g)}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+              {[{ v: "alpha", label: "A–Z" }, { v: "newest", label: "🕒 Newest first" }].map(opt => (
+                <button key={opt.v} onClick={() => setListSort(opt.v)} style={{
+                  padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  border: listSort === opt.v ? "1.5px solid #3a7fdc" : "1px solid rgba(0,0,0,.08)",
+                  background: listSort === opt.v ? "rgba(58,127,220,.06)" : "#fff",
+                  color: listSort === opt.v ? "#3a7fdc" : "#6b7c72", transition: "all .2s",
+                }}>
+                  {opt.label}
                 </button>
               ))}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {cards.filter(c => listFilter === "All" || c.group === listFilter).sort((a, b) => a.pt.localeCompare(b.pt)).map(card => (
+              {cards.filter(c => listFilter === "All" || c.group === listFilter).sort((a, b) => {
+                if (listSort === "newest") {
+                  if (!a.createdAt && !b.createdAt) return a.pt.localeCompare(b.pt);
+                  if (!a.createdAt) return 1;
+                  if (!b.createdAt) return -1;
+                  return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+                return a.pt.localeCompare(b.pt);
+              }).map(card => (
                 <div key={card.id} style={S.listItem}>
                   {editId === card.id ? (
                     <div style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap", alignItems: "center" }}>
                       <input value={editPt} onChange={e => setEditPt(e.target.value)} style={{ ...S.input, flex: 1, minWidth: 100, padding: "8px 10px", fontSize: 14 }} />
                       <input value={editEn} onChange={e => setEditEn(e.target.value)} style={{ ...S.input, flex: 1, minWidth: 100, padding: "8px 10px", fontSize: 14 }}
-                        onKeyDown={e => e.key === "Enter" && saveEdit()} />
+                        onKeyDown={e => { if (e.key === "Enter") { updateWordText(editId, editPt.trim(), editEn.trim()); setEditId(null); } }} />
                       <button onClick={() => {
-                        const updated = extraWords.map(w => w.id === editId ? { ...w, pt: editPt.trim(), en: editEn.trim() } : w);
-                        saveProgress(undefined, updated, undefined);
+                        updateWordText(editId, editPt.trim(), editEn.trim());
                         setEditId(null);
                       }} style={S.miniGreen}>✓</button>
                       <button onClick={() => setEditId(null)} style={S.miniGray}>✗</button>
@@ -899,10 +636,9 @@ export default function App() {
                           <span style={{ opacity: .3 }}>→</span>
                           <span style={{ color: "#5a6b62" }}>{card.en}</span>
                         </div>
-                        <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(58,127,220,.08)", color: "#3a7fdc" }}>G{card.group}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: BOX_COLORS[card.box] + "20", color: BOX_COLORS[card.box] }}>{BOX_LABELS[card.box]}</span>
+                        <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center", flexWrap: "wrap" }}>
                           {card.reviews > 0 && <span style={{ fontSize: 11, color: "#aab5ae" }}>{card.correct}/{card.reviews}</span>}
+                          {card.createdAt && <span style={{ fontSize: 11, color: "#aab5ae" }}>Added {new Date(card.createdAt).toLocaleDateString()}</span>}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -915,16 +651,12 @@ export default function App() {
                           style={{ fontSize: 12, padding: "3px 6px", borderRadius: 8, border: "1px solid rgba(0,0,0,.1)", background: "#fff", color: "#3a7fdc", fontWeight: 700, cursor: "pointer" }}
                         >
                           {allGroupNums.filter(g => g !== "mastered").map(g => (
-                            <option key={g} value={g}>Group {g}</option>
+                            <option key={g} value={g}>{groupLabel(g)}</option>
                           ))}
                           <option value="mastered">🏆 Mastered</option>
                         </select>
-                        {!MASTER_WORDS.find(w => w.id === card.id) && (
-                          <>
-                            <button onClick={() => { setEditId(card.id); setEditPt(card.pt); setEditEn(card.en); }} style={S.iconBtn}>✎</button>
-                            <button onClick={() => setDeleteConfirm(card.id)} style={{ ...S.iconBtn, color: "#dc2626" }}>×</button>
-                          </>
-                        )}
+                        <button onClick={() => { setEditId(card.id); setEditPt(card.pt); setEditEn(card.en); }} style={S.iconBtn}>✎</button>
+                        <button onClick={() => setDeleteConfirm(card.id)} style={{ ...S.iconBtn, color: "#dc2626" }}>×</button>
                       </div>
                     </>
                   )}
@@ -949,6 +681,15 @@ export default function App() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {masteredCards.sort((a, b) => a.pt.localeCompare(b.pt)).map(card => (
+                    deleteConfirm === card.id ? (
+                      <div key={card.id} style={{ ...S.listItem, borderColor: "rgba(26,157,86,.15)", background: "#f8fff9" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                          <span style={{ fontSize: 13, color: "#5a6b62" }}>Delete <strong>{card.pt}</strong>?</span>
+                          <button onClick={() => deleteWord(card.id)} style={{ ...S.miniGreen, background: "rgba(220,38,38,.1)", color: "#dc2626" }}>Yes</button>
+                          <button onClick={() => setDeleteConfirm(null)} style={S.miniGray}>No</button>
+                        </div>
+                      </div>
+                    ) : (
                     <div key={card.id} style={{ ...S.listItem, borderColor: "rgba(26,157,86,.15)", background: "#f8fff9" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -956,6 +697,7 @@ export default function App() {
                           <span style={{ opacity: .3 }}>→</span>
                           <span style={{ color: "#5a6b62" }}>{card.en}</span>
                         </div>
+                        {card.createdAt && <div style={{ fontSize: 11, color: "#aab5ae", marginTop: 4 }}>Added {new Date(card.createdAt).toLocaleDateString()}</div>}
                       </div>
                       <select
                         value="mastered"
@@ -964,10 +706,12 @@ export default function App() {
                       >
                         <option value="mastered">🏆 Mastered</option>
                         {allGroupNums.filter(g => g !== "mastered").map(g => (
-                          <option key={g} value={g}>Move → Group {g}</option>
+                          <option key={g} value={g}>Move → {groupLabel(g)}</option>
                         ))}
                       </select>
+                      <button onClick={() => setDeleteConfirm(card.id)} style={{ ...S.iconBtn, color: "#dc2626" }}>×</button>
                     </div>
+                    )
                   ))}
                 </div>
               )}
@@ -993,7 +737,6 @@ const S = {
   addGroupBtn: { background: "none", border: "1px solid rgba(26,157,86,.25)", color: "#1a9d56", fontSize: 13, fontWeight: 700, padding: "5px 12px", borderRadius: 8, cursor: "pointer" },
   grid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 28 },
   tile: { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "22px 10px 18px", borderRadius: 14, border: "1px solid rgba(0,0,0,.06)", cursor: "pointer", transition: "all .2s", background: "#fff" },
-  tileStudy: { background: "#f0faf4", borderColor: "rgba(26,157,86,.2)" },
   tileAdd: { background: "#fef9f0", borderColor: "rgba(210,140,40,.18)" },
   tileList: { background: "#f0f5ff", borderColor: "rgba(60,130,240,.18)" },
   tileIcon: { fontSize: 26 },
