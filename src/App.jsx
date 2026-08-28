@@ -310,7 +310,7 @@ export default function App() {
             </div>
 
             <div style={{ ...S.grid, gridTemplateColumns: "1fr 1fr" }}>
-              <button onClick={() => setView("add")} style={{ ...S.tile, ...S.tileAdd }}>
+              <button onClick={() => { setNewGroup(null); setView("add"); }} style={{ ...S.tile, ...S.tileAdd }}>
                 <span style={S.tileIcon}>✏️</span>
                 <span style={S.tileName}>Add Word</span>
                 <span style={S.tileHint}>New vocabulary</span>
