@@ -26,7 +26,8 @@ export default function App() {
   // Adding words
   const [newPt, setNewPt] = useState("");
   const [newEn, setNewEn] = useState("");
-  const [newGroup, setNewGroup] = useState(1);
+  // null = "no explicit pick yet", so the default below can follow group renames
+  const [newGroup, setNewGroup] = useState(null);
   const [justAdded, setJustAdded] = useState(false);
 
   // Group creation / management
@@ -127,6 +128,16 @@ export default function App() {
     return { total: pool.length };
   };
 
+  // Manually added words default to the group named "Newly Added" (matched by
+  // name so renaming or renumbering groups keeps working), else the first group.
+  const MANUAL_GROUP_NAME = "newly added";
+  const namedManualGroup = Object.entries(groupNames)
+    .find(([, name]) => String(name).trim().toLowerCase() === MANUAL_GROUP_NAME);
+  const defaultAddGroup = namedManualGroup
+    ? Number(namedManualGroup[0])
+    : (allGroupNums[0] ?? 1);
+  const selectedAddGroup = newGroup ?? defaultAddGroup;
+
   // Add word via UI. sentencePt/sentenceEn are left null — the daily cron
   // backfills a sample sentence for any word missing one.
   const addWord = useCallback(() => {
@@ -135,7 +146,7 @@ export default function App() {
     setDoc(doc(db, "words", id), {
       pt: newPt.trim(),
       en: newEn.trim(),
-      group: newGroup,
+      group: selectedAddGroup,
       sentencePt: null,
       sentenceEn: null,
       createdAt: new Date().toISOString(),
@@ -144,7 +155,7 @@ export default function App() {
     setNewPt(""); setNewEn("");
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
-  }, [newPt, newEn, newGroup]);
+  }, [newPt, newEn, selectedAddGroup]);
 
   // Add new group
   const addGroup = useCallback(() => {
@@ -465,9 +476,9 @@ export default function App() {
                 {allGroupNums.map(g => (
                   <button key={g} onClick={() => setNewGroup(g)} style={{
                     minWidth: 44, height: 44, padding: "0 12px", borderRadius: 10, fontSize: 14, fontWeight: 700,
-                    border: newGroup === g ? "2px solid #1a9d56" : "1px solid rgba(0,0,0,.1)",
-                    background: newGroup === g ? "rgba(26,157,86,.06)" : "#fff",
-                    color: newGroup === g ? "#1a9d56" : "#3a4a42",
+                    border: selectedAddGroup === g ? "2px solid #1a9d56" : "1px solid rgba(0,0,0,.1)",
+                    background: selectedAddGroup === g ? "rgba(26,157,86,.06)" : "#fff",
+                    color: selectedAddGroup === g ? "#1a9d56" : "#3a4a42",
                     cursor: "pointer", transition: "all .15s",
                   }}>{groupLabel(g)}</button>
                 ))}
