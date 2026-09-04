@@ -118,7 +118,7 @@ ${JSON.stringify(toBackfill, null, 2)}`;
     const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
 
     const WORDS_PER_RUN = 3;
-    const prompt = `Generate ${WORDS_PER_RUN} distinct Portuguese vocabulary words or short phrases commonly used in Brazil: 2 at B2 level and 1 at B1 level. Favour the B2 entries being genuinely B2 — idiomatic expressions, phrasal constructions, or less obvious vocabulary, not textbook basics.
+    const prompt = `Generate ${WORDS_PER_RUN} distinct Portuguese entries commonly used in Brazil, all at B1 level: 2 single words (each a verb or a noun) and 1 short phrase or expression that Brazilians actually use often in daily conversation. Keep everything solidly B1 — useful, everyday language, not advanced or obscure vocabulary.
 Loosely theme this batch around: ${theme}.${avoidList}
 Return ONLY a JSON array of ${WORDS_PER_RUN} objects with this exact structure:
 [{ "pt": "The Portuguese word or phrase", "en": "The English translation" }]`;
